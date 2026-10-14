@@ -4,10 +4,8 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import ni.edu.uam.citastecnicas.config.DB;
 
 import java.io.IOException;
-import java.sql.SQLException;
 
 public class App extends Application {
     @Override
@@ -17,16 +15,5 @@ public class App extends Application {
         stage.setTitle("CitasTecnicas");
         stage.setScene(scene);
         stage.show();
-
-        try {
-            boolean test = DB.testConnection();
-            if (test) {
-                System.out.println("Conectado");
-            } else {
-                System.err.println("No conectado");
-            }
-        } catch (SQLException e) {
-            System.err.println("Error: " + e.getMessage());
-        }
     }
 }
