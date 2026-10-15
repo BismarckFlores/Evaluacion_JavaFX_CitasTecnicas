@@ -285,12 +285,15 @@ public class CitasTecnicasController implements Initializable {
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
+                getStyleClass().removeAll(
+                        "status-pending", "status-progress",
+                        "status-success", "status-neutral"
+                );
                 if (empty || status == null) {
                     setText(null);
-                    setStyle("");
                 } else {
                     setText(status);
-                    setStyle(resolveStatusStyle(status));
+                    getStyleClass().add(resolveStatusClass(status));
                 }
             }
         });
@@ -456,18 +459,12 @@ public class CitasTecnicasController implements Initializable {
         }
     }
 
-    /** Returns an inline style string that colors the status cell. */
-    private String resolveStatusStyle(String status) {
+    private String resolveStatusClass(String status) {
         return switch (status) {
-            case "Pendiente"   -> "-fx-background-color: #fef9c3; -fx-text-fill: #854d0e; "
-                                + "-fx-font-weight: bold; -fx-alignment: center;";
-            case "En proceso"  -> "-fx-background-color: #dbeafe; -fx-text-fill: #1e40af; "
-                                + "-fx-font-weight: bold; -fx-alignment: center;";
-            case "Finalizada"  -> "-fx-background-color: #dcfce7; -fx-text-fill: #166534; "
-                                + "-fx-font-weight: bold; -fx-alignment: center;";
-            case "Cancelada"   -> "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b; "
-                                + "-fx-font-weight: bold; -fx-alignment: center;";
-            default            -> "";
+            case "Pendiente" -> "status-pending";
+            case "En proceso" -> "status-progress";
+            case "Finalizada" -> "status-success";
+            default -> "status-neutral";
         };
     }
 }
