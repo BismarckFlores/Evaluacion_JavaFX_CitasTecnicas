@@ -22,6 +22,63 @@
     -fx-background-color: -app-background;
 }
 
+.app-shell {
+    -fx-background-color: -app-background;
+}
+
+.sidebar {
+    -fx-padding: 24 14;
+    -fx-background-color: #172b4d;
+}
+
+.brand {
+    -fx-padding: 0 4 24 4;
+}
+
+.sidebar .brand-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.sidebar .brand-subtitle,
+.sidebar .nav-caption {
+    -fx-font-size: 12px;
+    -fx-text-fill: #c8d5e8;
+}
+
+.nav-caption {
+    -fx-padding: 12 4 0 4;
+}
+
+.sidebar .nav-section {
+    -fx-padding: 0 12 4 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #9db1cf;
+}
+
+.button.nav-button {
+    -fx-padding: 11 14;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #dce6f5;
+    -fx-alignment: center-left;
+}
+
+.button.nav-button:hover {
+    -fx-background-color: #243e63;
+}
+
+.button.nav-button:selected {
+    -fx-background-color: -app-primary;
+    -fx-text-fill: white;
+}
+
+.button.nav-button:focused {
+    -fx-border-color: #92b4ef;
+}
+
 .label {
     -fx-text-fill: -app-text;
 }
