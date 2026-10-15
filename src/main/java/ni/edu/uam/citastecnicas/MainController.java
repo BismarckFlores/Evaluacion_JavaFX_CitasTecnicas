@@ -15,6 +15,7 @@ import ni.edu.uam.citastecnicas.dao.impl.JdbcClientDao;
 import ni.edu.uam.citastecnicas.service.AppointmentService;
 import ni.edu.uam.citastecnicas.service.ClientService;
 
+import ni.edu.uam.citastecnicas.util.Alerts;
 import java.io.IOException;
 import java.net.URL;
 
@@ -83,15 +84,7 @@ public class MainController {
             root.setCenter(view);
             return true;
         } catch (IOException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("No se pudo abrir el módulo");
-            alert.setHeaderText(null);
-            alert.setContentText(e.getMessage());
-            alert.getDialogPane().getStylesheets().add(
-                    getClass().getResource("/ni/edu/uam/citastecnicas/css/root.css")
-                            .toExternalForm()
-            );
-            alert.showAndWait();
+            Alerts.show(root, Alert.AlertType.ERROR, "No se pudo abrir el módulo", e.getMessage());
             return false;
         }
     }
