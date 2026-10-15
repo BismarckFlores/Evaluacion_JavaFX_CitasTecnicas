@@ -348,14 +348,17 @@ public class ClientController {
             return;
         }
 
-        clienteSeleccionado.setFirstName(txtNombres.getText().trim());
-        clienteSeleccionado.setLastName(txtApellidos.getText().trim());
-        clienteSeleccionado.setPhone(txtTelefono.getText().trim());
-        clienteSeleccionado.setEmail(txtCorreo.getText().trim());
-        clienteSeleccionado.setActive(chkActivo.isSelected());
+        Cliente clienteActualizado = new Cliente(
+                clienteSeleccionado.getId(),
+                txtNombres.getText().trim(),
+                txtApellidos.getText().trim(),
+                txtTelefono.getText().trim(),
+                txtCorreo.getText().trim(),
+                chkActivo.isSelected()
+        );
 
         try {
-            clientService.update(clienteSeleccionado);
+            clientService.update(clienteActualizado);
             mostrarAlerta(Alert.AlertType.INFORMATION, "Cliente actualizado",
                     "Los datos del cliente fueron actualizados correctamente.");
             limpiarFormulario();

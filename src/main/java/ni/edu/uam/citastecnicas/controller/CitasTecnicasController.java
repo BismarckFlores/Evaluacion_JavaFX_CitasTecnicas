@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -69,7 +70,8 @@ public class CitasTecnicasController implements Initializable {
     private CitaTecnica selectedAppointment;
 
     private static final DateTimeFormatter TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("HH:mm");
+            DateTimeFormatter.ofPattern("HH:mm")
+                    .withResolverStyle(ResolverStyle.STRICT);
 
     // ═══════════════════════════════════════════════════════════════════════════
     //  Initializable
@@ -97,8 +99,13 @@ public class CitasTecnicasController implements Initializable {
                             ClientService clientService) {
         this.appointmentService = appointmentService;
         this.clientService = clientService;
+        refreshData();
+    }
+
+    public void refreshData() {
+        clearForm();
         loadClients();
-        loadAllAppointments();
+        onFilter();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
