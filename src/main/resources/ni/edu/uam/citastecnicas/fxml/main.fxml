@@ -6,28 +6,24 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml"
+<BorderPane fx:id="root" xmlns:fx="http://javafx.com/fxml"
             fx:controller="ni.edu.uam.citastecnicas.MainController"
             prefWidth="1200.0" prefHeight="750.0">
 
     <left>
-        <VBox spacing="8.0" prefWidth="200.0"
-              style="-fx-background-color: #2c3e50;">
+        <VBox spacing="8.0" prefWidth="200.0" style="-fx-background-color: #2c3e50;">
             <padding>
                 <Insets top="20.0" right="12.0" bottom="20.0" left="12.0"/>
             </padding>
 
-            <Label text="Citas Técnicas"
+            <Label text="TecnoAsistencia"
                    style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;"/>
 
-            <Button fx:id="btnCitas" text="Citas" maxWidth="Infinity" onAction="#mostrarCitas"/>
-            <Button fx:id="btnClientes" text="Clientes" maxWidth="Infinity" onAction="#mostrarClientes"/>
-            <Button fx:id="btnServicios" text="Servicios" maxWidth="Infinity" onAction="#mostrarServicios"/>
-            <Button fx:id="btnTecnicos" text="Técnicos" maxWidth="Infinity" onAction="#mostrarTecnicos"/>
+            <Button text="Citas"     maxWidth="Infinity" onAction="#mostrarCitas"/>
+            <Button text="Clientes"  maxWidth="Infinity" onAction="#mostrarClientes"/>
+            <Button text="Servicios" maxWidth="Infinity" onAction="#mostrarServicios"/>
+            <Button text="Técnicos"  maxWidth="Infinity" onAction="#mostrarTecnicos"/>
         </VBox>
     </left>
 
-    <center>
-        <!-- Aquí se cargan las pantallas desde MainController -->
-    </center>
 </BorderPane>
