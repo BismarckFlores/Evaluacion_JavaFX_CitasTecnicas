@@ -3,11 +3,9 @@ package ni.edu.uam.citastecnicas.controller;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -19,9 +17,10 @@ import ni.edu.uam.citastecnicas.dao.impl.JdbcClientDao;
 import ni.edu.uam.citastecnicas.model.Cliente;
 import ni.edu.uam.citastecnicas.service.ClientService;
 import ni.edu.uam.citastecnicas.service.ServiceException;
+import ni.edu.uam.citastecnicas.util.Alerts;
+import ni.edu.uam.citastecnicas.util.Form;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -34,8 +33,6 @@ public class ClientController {
 
     private static final Pattern PATRON_CORREO =
             Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
-
-    private static final PseudoClass INVALID = PseudoClass.getPseudoClass("invalid");
 
     @FXML
     private TextField txtBuscar;
@@ -112,6 +109,7 @@ public class ClientController {
     @FXML
     private Label lblEstado;
 
+    private final Form form = new Form();
     private final ClientService clientService;
     private final ObservableList<Cliente> listaClientes = FXCollections.observableArrayList();
     private Cliente clienteSeleccionado;
@@ -176,32 +174,36 @@ public class ClientController {
     }
 
     /**
-     * Limpia el estilo de error visual en tiempo real cuando el usuario escribe en un campo.
+     * Limita la longitud y valida al salir del campo; vuelve a validar al corregirlo.
      */
     private void configurarListenersValidacionVisual() {
-        txtNombres.textProperty().addListener((obs, viejo, nuevo) -> {
-            if (nuevo != null && !nuevo.isBlank()) {
-                limpiarErrorVisual(txtNombres, lblErrorNombres);
-            }
+        Form.limit(txtNombres, 80);
+        Form.limit(txtApellidos, 80);
+        Form.limit(txtTelefono, 20);
+        Form.limit(txtCorreo, 120);
+        Form.limit(txtBuscar, 255);
+        form.add(txtNombres, lblErrorNombres, txtNombres.textProperty(),
+                () -> nameError(txtNombres.getText()));
+        form.add(txtApellidos, lblErrorApellidos, txtApellidos.textProperty(),
+                () -> nameError(txtApellidos.getText()));
+        form.add(txtTelefono, lblErrorTelefono, txtTelefono.textProperty(), () -> {
+            String phone = txtTelefono.getText().strip();
+            if (phone.isEmpty()) return "El teléfono es obligatorio.";
+            if (!phone.matches("\\+?[0-9 ()-]+")) return "Usá números, espacios, +, guiones o paréntesis.";
+            int digits = phone.replaceAll("[^0-9]", "").length();
+            return digits >= 7 && digits <= 15 ? "" : "Ingresá entre 7 y 15 dígitos.";
         });
+        form.add(txtCorreo, lblErrorCorreo, txtCorreo.textProperty(), () -> {
+            String email = txtCorreo.getText().strip();
+            if (email.isEmpty()) return "El correo es obligatorio.";
+            return PATRON_CORREO.matcher(email).matches() ? "" : "Formato inválido (ej: usuario@correo.com).";
+        });
+    }
 
-        txtApellidos.textProperty().addListener((obs, viejo, nuevo) -> {
-            if (nuevo != null && !nuevo.isBlank()) {
-                limpiarErrorVisual(txtApellidos, lblErrorApellidos);
-            }
-        });
-
-        txtTelefono.textProperty().addListener((obs, viejo, nuevo) -> {
-            if (nuevo != null && !nuevo.isBlank()) {
-                limpiarErrorVisual(txtTelefono, lblErrorTelefono);
-            }
-        });
-
-        txtCorreo.textProperty().addListener((obs, viejo, nuevo) -> {
-            if (nuevo != null && PATRON_CORREO.matcher(nuevo.trim()).matches()) {
-                limpiarErrorVisual(txtCorreo, lblErrorCorreo);
-            }
-        });
+    private String nameError(String text) {
+        if (text.isBlank()) return "Este campo es obligatorio.";
+        return text.strip().matches("[\\p{L}\\p{M}]+(?:[ '\u2019-][\\p{L}\\p{M}]+)*")
+                ? "" : "Usá letras, espacios, apóstrofes o guiones.";
     }
 
     /**
@@ -245,6 +247,7 @@ public class ClientController {
         btnActualizar.setDisable(false);
         btnEliminar.setDisable(false);
 
+        form.reset();
         actualizarMensajeEstado("Editando cliente ID: " + cliente.getId());
     }
 
@@ -253,75 +256,11 @@ public class ClientController {
      * Retorna true si todos los campos son válidos.
      */
     private boolean validarFormularioVisual() {
-        boolean valido = true;
-        limpiarErroresVisuales();
-
-        String nombres = txtNombres.getText() != null ? txtNombres.getText().trim() : "";
-        String apellidos = txtApellidos.getText() != null ? txtApellidos.getText().trim() : "";
-        String telefono = txtTelefono.getText() != null ? txtTelefono.getText().trim() : "";
-        String correo = txtCorreo.getText() != null ? txtCorreo.getText().trim() : "";
-
-        if (nombres.isEmpty()) {
-            mostrarErrorVisual(txtNombres, lblErrorNombres, "Los nombres son obligatorios.");
-            valido = false;
-        } else if (nombres.length() > 80) {
-            mostrarErrorVisual(txtNombres, lblErrorNombres, "Máximo 80 caracteres.");
-            valido = false;
-        }
-
-        if (apellidos.isEmpty()) {
-            mostrarErrorVisual(txtApellidos, lblErrorApellidos, "Los apellidos son obligatorios.");
-            valido = false;
-        } else if (apellidos.length() > 80) {
-            mostrarErrorVisual(txtApellidos, lblErrorApellidos, "Máximo 80 caracteres.");
-            valido = false;
-        }
-
-        if (telefono.isEmpty()) {
-            mostrarErrorVisual(txtTelefono, lblErrorTelefono, "El teléfono es obligatorio.");
-            valido = false;
-        } else if (telefono.length() > 20) {
-            mostrarErrorVisual(txtTelefono, lblErrorTelefono, "Máximo 20 caracteres.");
-            valido = false;
-        }
-
-        if (correo.isEmpty()) {
-            mostrarErrorVisual(txtCorreo, lblErrorCorreo, "El correo es obligatorio.");
-            valido = false;
-        } else if (!PATRON_CORREO.matcher(correo).matches()) {
-            mostrarErrorVisual(txtCorreo, lblErrorCorreo, "Formato inválido (ej: usuario@correo.com).");
-            valido = false;
-        } else if (correo.length() > 120) {
-            mostrarErrorVisual(txtCorreo, lblErrorCorreo, "Máximo 120 caracteres.");
-            valido = false;
-        }
-
-        return valido;
-    }
-
-    private void mostrarErrorVisual(TextField campo, Label labelError, String mensaje) {
-        campo.pseudoClassStateChanged(INVALID, true);
-        if (labelError != null) {
-            labelError.setText(mensaje);
-            labelError.setVisible(true);
-            labelError.setManaged(true);
-        }
-    }
-
-    private void limpiarErrorVisual(TextField campo, Label labelError) {
-        campo.pseudoClassStateChanged(INVALID, false);
-        if (labelError != null) {
-            labelError.setText("");
-            labelError.setVisible(false);
-            labelError.setManaged(false);
-        }
+        return form.validate();
     }
 
     private void limpiarErroresVisuales() {
-        limpiarErrorVisual(txtNombres, lblErrorNombres);
-        limpiarErrorVisual(txtApellidos, lblErrorApellidos);
-        limpiarErrorVisual(txtTelefono, lblErrorTelefono);
-        limpiarErrorVisual(txtCorreo, lblErrorCorreo);
+        form.reset();
     }
 
     @FXML
@@ -401,15 +340,9 @@ public class ClientController {
             return;
         }
 
-        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmacion.setTitle("Confirmar eliminación");
-        confirmacion.setHeaderText(null);
-        confirmacion.setContentText("¿Estás seguro de que deseas eliminar permanentemente al cliente:\n"
-                + clienteSeleccionado.getFirstName() + " " + clienteSeleccionado.getLastName()
-                + " (ID: " + clienteSeleccionado.getId() + ")?\n\nEsta acción no se puede deshacer.");
-
-        Optional<ButtonType> respuesta = confirmacion.showAndWait();
-        if (respuesta.isPresent() && respuesta.get() == ButtonType.OK) {
+        if (Alerts.confirm(tblClientes, "Confirmar eliminación",
+                "¿Eliminar permanentemente al cliente " + clienteSeleccionado.getFirstName()
+                        + " " + clienteSeleccionado.getLastName() + "?")) {
             try {
                 clientService.delete(clienteSeleccionado.getId());
                 mostrarAlerta(Alert.AlertType.INFORMATION, "Cliente eliminado",
@@ -466,6 +399,7 @@ public class ClientController {
         txtCorreo.clear();
         chkActivo.setSelected(true);
 
+        form.reset();
         clienteSeleccionado = null;
         tblClientes.getSelectionModel().clearSelection();
 
@@ -487,10 +421,6 @@ public class ClientController {
     }
 
     private void mostrarAlerta(Alert.AlertType tipo, String titulo, String contenido) {
-        Alert alerta = new Alert(tipo);
-        alerta.setTitle(titulo);
-        alerta.setHeaderText(null);
-        alerta.setContentText(contenido);
-        alerta.showAndWait();
+        Alerts.show(tblClientes, tipo, titulo, contenido);
     }
 }

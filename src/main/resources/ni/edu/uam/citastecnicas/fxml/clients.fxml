@@ -67,7 +67,7 @@
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="toolbar">
                     <Label text="Buscar" styleClass="field-label" />
-                    <TextField fx:id="txtBuscar" promptText="Nombres, apellidos o correo" HBox.hgrow="ALWAYS" onKeyReleased="#onBuscar" />
+                    <TextField fx:id="txtBuscar" promptText="Nombres, apellidos o correo" HBox.hgrow="ALWAYS" />
                     <Button fx:id="btnLimpiarBusqueda" text="Limpiar" onAction="#onLimpiarBusqueda" />
                 </HBox>
                 <TableView fx:id="tblClientes" VBox.vgrow="ALWAYS">

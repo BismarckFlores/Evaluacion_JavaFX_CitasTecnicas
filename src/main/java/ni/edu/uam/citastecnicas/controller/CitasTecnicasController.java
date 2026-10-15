@@ -14,6 +14,8 @@ import ni.edu.uam.citastecnicas.model.Cliente;
 import ni.edu.uam.citastecnicas.service.AppointmentService;
 import ni.edu.uam.citastecnicas.service.ClientService;
 import ni.edu.uam.citastecnicas.service.ServiceException;
+import ni.edu.uam.citastecnicas.util.Alerts;
+import ni.edu.uam.citastecnicas.util.Form;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,7 +24,6 @@ import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 /**
@@ -70,6 +71,13 @@ public class CitasTecnicasController implements Initializable {
     // ─────────────────────── Internal state ───────────────────────────────────
     /** Keeps track of the appointment currently selected for editing. */
     private CitaTecnica selectedAppointment;
+    private final Form form = new Form();
+    @FXML private Label clientError;
+    @FXML private Label dateError;
+    @FXML private Label timeError;
+    @FXML private Label serviceError;
+    @FXML private Label descriptionError;
+    @FXML private Label statusError;
 
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("HH:mm")
@@ -90,6 +98,7 @@ public class CitasTecnicasController implements Initializable {
         sortedData.comparatorProperty().bind(appointmentsTable.comparatorProperty());
         appointmentsTable.setItems(sortedData);
         configureStatusComboBoxes();
+        configureValidation();
         searchField.textProperty().addListener((observable, previous, text) -> onSearch());
         // Services must be injected before the scene is shown; see setServices().
     }
@@ -371,34 +380,42 @@ public class CitasTecnicasController implements Initializable {
      * @return {@code true} if the form is valid, {@code false} otherwise
      */
     private boolean validateFormFields() {
-        StringBuilder errors = new StringBuilder();
+        return form.validate();
+    }
 
-        if (clientComboBox.getValue() == null) {
-            errors.append("• Seleccioná un cliente.\n");
-        }
-        if (datePicker.getValue() == null) {
-            errors.append("• Seleccioná la fecha de la cita.\n");
-        }
-        if (timeField.getText() == null || timeField.getText().isBlank()) {
-            errors.append("• Ingresá la hora de la cita (HH:mm).\n");
-        } else if (!isValidTime(timeField.getText().strip())) {
-            errors.append("• La hora debe tener formato HH:mm (ej: 09:30).\n");
-        }
-        if (serviceTypeField.getText() == null || serviceTypeField.getText().isBlank()) {
-            errors.append("• Completá el tipo de servicio.\n");
-        }
-        if (descriptionArea.getText() == null || descriptionArea.getText().isBlank()) {
-            errors.append("• Completá la descripción.\n");
-        }
-        if (statusComboBox.getValue() == null) {
-            errors.append("• Seleccioná el estado de la cita.\n");
-        }
+    private boolean allowedDate(LocalDate day) {
+        return day != null && (!day.isBefore(LocalDate.now())
+                || (selectedAppointment != null && day.equals(selectedAppointment.getDate())));
+    }
 
-        if (!errors.isEmpty()) {
-            showError("Datos incompletos", errors.toString());
-            return false;
-        }
-        return true;
+    private void configureValidation() {
+        Form.limit(timeField, 5);
+        Form.limit(serviceTypeField, 80);
+        Form.limit(descriptionArea, 255);
+        Form.limit(searchField, 255);
+        datePicker.setEditable(false);
+        filterDatePicker.setEditable(false);
+        datePicker.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate day, boolean empty) {
+                super.updateItem(day, empty);
+                setDisable(empty || !allowedDate(day));
+            }
+        });
+        form.add(clientComboBox, clientError, clientComboBox.valueProperty(),
+                () -> clientComboBox.getValue() != null && clientComboBox.getItems().contains(clientComboBox.getValue())
+                        ? "" : "Seleccioná un cliente de la lista.");
+        form.add(datePicker, dateError, datePicker.valueProperty(),
+                () -> allowedDate(datePicker.getValue()) ? "" : "Seleccioná hoy o una fecha futura.");
+        form.add(timeField, timeError, timeField.textProperty(),
+                () -> isValidTime(timeField.getText().strip()) ? "" : "Usá HH:mm, entre 00:00 y 23:59.");
+        form.add(serviceTypeField, serviceError, serviceTypeField.textProperty(),
+                () -> serviceTypeField.getText().isBlank() ? "El servicio es obligatorio." : "");
+        form.add(descriptionArea, descriptionError, descriptionArea.textProperty(),
+                () -> descriptionArea.getText().isBlank() ? "La descripción es obligatoria." : "");
+        form.add(statusComboBox, statusError, statusComboBox.valueProperty(),
+                () -> AppointmentService.STATUSES.contains(statusComboBox.getValue() == null ? "" : statusComboBox.getValue())
+                        ? "" : "Seleccioná un estado de la lista.");
     }
 
     /** Builds a {@link CitaTecnica} from the current form values (no validation). */
@@ -428,6 +445,7 @@ public class CitasTecnicasController implements Initializable {
         serviceTypeField.setText(appt.getServiceType());
         descriptionArea.setText(appt.getDescription());
         statusComboBox.setValue(appt.getStatus());
+        form.reset();
     }
 
     /** Resets all form controls and clears the selected appointment. */
@@ -440,6 +458,7 @@ public class CitasTecnicasController implements Initializable {
         descriptionArea.clear();
         statusComboBox.setValue(null);
         appointmentsTable.getSelectionModel().clearSelection();
+        form.reset();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -447,33 +466,15 @@ public class CitasTecnicasController implements Initializable {
     // ═══════════════════════════════════════════════════════════════════════════
 
     private void showError(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Alerts.show(appointmentsTable, Alert.AlertType.ERROR, title, message);
     }
 
     private void showSuccess(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Operación exitosa");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Alerts.show(appointmentsTable, Alert.AlertType.INFORMATION, "Operación exitosa", message);
     }
 
-    /**
-     * Shows a YES/NO confirmation dialog.
-     *
-     * @return {@code true} if the user pressed OK/Aceptar
-     */
     private boolean showConfirmation(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == ButtonType.OK;
+        return Alerts.confirm(appointmentsTable, title, message);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

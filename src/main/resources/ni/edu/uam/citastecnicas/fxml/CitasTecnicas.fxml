@@ -23,26 +23,32 @@
                         <VBox spacing="5.0">
                             <Label text="Cliente *" styleClass="field-label" />
                             <ComboBox fx:id="clientComboBox" promptText="Seleccionar cliente" maxWidth="Infinity" />
+                            <Label fx:id="clientError" styleClass="error-label" visible="false" managed="false" wrapText="true" />
                         </VBox>
                         <VBox spacing="5.0">
                             <Label text="Fecha *" styleClass="field-label" />
                             <DatePicker fx:id="datePicker" promptText="dd/mm/aaaa" maxWidth="Infinity" />
+                            <Label fx:id="dateError" styleClass="error-label" visible="false" managed="false" wrapText="true" />
                         </VBox>
                         <VBox spacing="5.0">
                             <Label text="Hora *" styleClass="field-label" />
                             <TextField fx:id="timeField" promptText="HH:mm · Ej. 09:30" />
+                            <Label fx:id="timeError" styleClass="error-label" visible="false" managed="false" wrapText="true" />
                         </VBox>
                         <VBox spacing="5.0">
                             <Label text="Tipo de servicio *" styleClass="field-label" />
                             <TextField fx:id="serviceTypeField" promptText="Ej. Mantenimiento preventivo" />
+                            <Label fx:id="serviceError" styleClass="error-label" visible="false" managed="false" wrapText="true" />
                         </VBox>
                         <VBox spacing="5.0">
                             <Label text="Descripción *" styleClass="field-label" />
                             <TextArea fx:id="descriptionArea" promptText="Detalles de la cita" prefRowCount="3" wrapText="true" />
+                            <Label fx:id="descriptionError" styleClass="error-label" visible="false" managed="false" wrapText="true" />
                         </VBox>
                         <VBox spacing="5.0">
                             <Label text="Estado *" styleClass="field-label" />
                             <ComboBox fx:id="statusComboBox" promptText="Seleccionar estado" maxWidth="Infinity" />
+                            <Label fx:id="statusError" styleClass="error-label" visible="false" managed="false" wrapText="true" />
                         </VBox>
                     </VBox>
                 </ScrollPane>

@@ -406,3 +406,28 @@
     -fx-background-color: #c3cedd;
     -fx-background-radius: 6;
 }
+
+.text-area:invalid,
+.combo-box:invalid,
+.date-picker:invalid,
+.date-picker:invalid:contains-focus {
+    -fx-border-color: -app-danger;
+    -fx-effect: none;
+}
+
+.date-picker-popup .day-cell:disabled {
+    -fx-background-color: #e9eef5;
+    -fx-text-fill: #94a3b8;
+    -fx-opacity: 0.65;
+}
+
+.app-dialog {
+    -fx-background-color: -app-background;
+    -fx-padding: 18;
+}
+
+.app-dialog .content.label {
+    -fx-wrap-text: true;
+    -fx-pref-width: 420;
+    -fx-text-fill: -app-text;
+}
