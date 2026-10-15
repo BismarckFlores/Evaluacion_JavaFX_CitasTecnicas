@@ -6,6 +6,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -18,6 +19,7 @@ import ni.edu.uam.citastecnicas.service.ClientService;
 import ni.edu.uam.citastecnicas.service.ServiceException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -128,6 +130,8 @@ public class ClientController {
 
         configurarSeleccionTabla();
         configurarListenersValidacionVisual();
+        configurarListenerBusqueda();
+
         cargarClientes();
     }
 
@@ -146,7 +150,7 @@ public class ClientController {
     }
 
     /**
-     * Detecta la selección en la tabla y carga los datos en el formulario.
+     * Detecta la selección en la tabla y carga los datos en el formulario para editar o eliminar.
      */
     private void configurarSeleccionTabla() {
         tblClientes.getSelectionModel().selectedItemProperty().addListener((obs, viejo, nuevo) -> {
@@ -158,7 +162,7 @@ public class ClientController {
     }
 
     /**
-     * Limpia el estilo de error en tiempo real cuando el usuario escribe en un campo.
+     * Limpia el estilo de error visual en tiempo real cuando el usuario escribe en un campo.
      */
     private void configurarListenersValidacionVisual() {
         txtNombres.textProperty().addListener((obs, viejo, nuevo) -> {
@@ -187,7 +191,16 @@ public class ClientController {
     }
 
     /**
-     * Carga todos los clientes de la base de datos a través de ClientService.
+     * Filtra la tabla automáticamente mientras el usuario escribe en la barra de búsqueda (RF05).
+     */
+    private void configurarListenerBusqueda() {
+        txtBuscar.textProperty().addListener((obs, viejo, nuevo) -> {
+            ejecutarBusqueda();
+        });
+    }
+
+    /**
+     * Carga todos los clientes de la base de datos a través de ClientService (RF02).
      */
     public void cargarClientes() {
         try {
@@ -222,7 +235,7 @@ public class ClientController {
     }
 
     /**
-     * Valida visualmente los campos obligatorios y el formato de correo.
+     * Valida visualmente los campos obligatorios y el formato de correo (RF07).
      * Retorna true si todos los campos son válidos.
      */
     private boolean validarFormularioVisual() {
@@ -358,22 +371,73 @@ public class ClientController {
         actualizarMensajeEstado("Formulario listo para nuevo registro.");
     }
 
+    /**
+     * Eliminación física con confirmación previa y control de integridad referencial (RF08).
+     * Si el cliente tiene citas técnicas asociadas, la base de datos y la capa de servicio
+     * rechazan la eliminación explicando el motivo al usuario.
+     */
     @FXML
     private void onEliminar() {
-        // En el Paso 3 se incluye la confirmación previa (RF08) y validación de citas asociadas (RF08 / 23503)
+        if (clienteSeleccionado == null || txtId.getText().isBlank()) {
+            mostrarAlerta(Alert.AlertType.WARNING, "Selección requerida",
+                    "Por favor seleccioná un cliente de la tabla para eliminar.");
+            return;
+        }
+
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Confirmar eliminación");
+        confirmacion.setHeaderText(null);
+        confirmacion.setContentText("¿Estás seguro de que deseas eliminar permanentemente al cliente:\n"
+                + clienteSeleccionado.getFirstName() + " " + clienteSeleccionado.getLastName()
+                + " (ID: " + clienteSeleccionado.getId() + ")?\n\nEsta acción no se puede deshacer.");
+
+        Optional<ButtonType> respuesta = confirmacion.showAndWait();
+        if (respuesta.isPresent() && respuesta.get() == ButtonType.OK) {
+            try {
+                clientService.delete(clienteSeleccionado.getId());
+                mostrarAlerta(Alert.AlertType.INFORMATION, "Cliente eliminado",
+                        "El cliente fue eliminado exitosamente del sistema.");
+                limpiarFormulario();
+                cargarClientes();
+            } catch (ServiceException e) {
+                // Alerta clara explicando el motivo (ej. cliente con citas asociadas)
+                mostrarAlerta(Alert.AlertType.ERROR, "Eliminación restringida", e.getMessage());
+                actualizarMensajeEstado("Operación denegada: " + e.getMessage());
+            }
+        }
     }
 
+    /**
+     * Búsqueda por coincidencia parcial de nombres, apellidos o correo (RF05).
+     */
     @FXML
     private void onBuscar() {
-        // En el Paso 3 se conecta la búsqueda en tiempo real (RF05)
+        ejecutarBusqueda();
+    }
+
+    private void ejecutarBusqueda() {
+        String texto = txtBuscar.getText();
+        if (texto == null || texto.isBlank()) {
+            cargarClientes();
+            return;
+        }
+
+        try {
+            List<Cliente> resultados = clientService.search(texto.trim());
+            listaClientes.setAll(resultados);
+            actualizarContador(resultados.size());
+            actualizarMensajeEstado("Búsqueda: '" + texto.trim() + "' (" + resultados.size() + " encontrados).");
+        } catch (ServiceException e) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error de búsqueda", e.getMessage());
+        }
     }
 
     @FXML
     private void onLimpiarBusqueda() {
         if (txtBuscar != null) {
             txtBuscar.clear();
-            cargarClientes();
         }
+        cargarClientes();
     }
 
     private void limpiarFormulario() {
