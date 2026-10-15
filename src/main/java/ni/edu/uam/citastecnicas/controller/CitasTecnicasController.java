@@ -2,6 +2,8 @@ package ni.edu.uam.citastecnicas.controller;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -12,7 +14,6 @@ import ni.edu.uam.citastecnicas.model.Cliente;
 import ni.edu.uam.citastecnicas.service.AppointmentService;
 import ni.edu.uam.citastecnicas.service.ClientService;
 import ni.edu.uam.citastecnicas.service.ServiceException;
-
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -20,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -73,6 +75,9 @@ public class CitasTecnicasController implements Initializable {
             DateTimeFormatter.ofPattern("HH:mm")
                     .withResolverStyle(ResolverStyle.STRICT);
 
+    @FXML private TextField searchField;
+    private final ObservableList<CitaTecnica> masterData = FXCollections.observableArrayList();
+    private FilteredList<CitaTecnica> filteredData;
     // ═══════════════════════════════════════════════════════════════════════════
     //  Initializable
     // ═══════════════════════════════════════════════════════════════════════════
@@ -80,7 +85,12 @@ public class CitasTecnicasController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         configureTableColumns();
+        filteredData = new FilteredList<>(masterData, a -> true);
+        SortedList<CitaTecnica> sortedData = new SortedList<>(filteredData);
+        sortedData.comparatorProperty().bind(appointmentsTable.comparatorProperty());
+        appointmentsTable.setItems(sortedData);
         configureStatusComboBoxes();
+        searchField.textProperty().addListener((observable, previous, text) -> onSearch());
         // Services must be injected before the scene is shown; see setServices().
     }
 
@@ -123,7 +133,7 @@ public class CitasTecnicasController implements Initializable {
             appointmentService.insert(appointment);
             showSuccess("Cita registrada correctamente.");
             clearForm();
-            loadAllAppointments();
+            onFilter();
         } catch (ServiceException e) {
             showError("Error al guardar", e.getMessage());
         }
@@ -145,7 +155,7 @@ public class CitasTecnicasController implements Initializable {
             appointmentService.update(updated);
             showSuccess("Cita actualizada correctamente.");
             clearForm();
-            loadAllAppointments();
+            onFilter();
         } catch (ServiceException e) {
             showError("Error al editar", e.getMessage());
         }
@@ -171,7 +181,7 @@ public class CitasTecnicasController implements Initializable {
             appointmentService.delete(selectedAppointment.getId());
             showSuccess("Cita eliminada correctamente.");
             clearForm();
-            loadAllAppointments();
+            onFilter();
         } catch (ServiceException e) {
             showError("Error al eliminar", e.getMessage());
         }
@@ -206,11 +216,11 @@ public class CitasTecnicasController implements Initializable {
     /** Clears filter controls and reloads the full table. */
     @FXML
     private void onClearFilters() {
+        searchField.clear();
         filterStatusComboBox.setValue(null);
         filterDatePicker.setValue(null);
         loadAllAppointments();
     }
-
     /** Populates the form when the user clicks a row in the table. */
     @FXML
     private void onTableRowClicked(MouseEvent event) {
@@ -300,10 +310,30 @@ public class CitasTecnicasController implements Initializable {
     }
 
     private void populateTable(List<CitaTecnica> appointments) {
-        ObservableList<CitaTecnica> data =
-                FXCollections.observableArrayList(appointments);
-        appointmentsTable.setItems(data);
-        recordCountLabel.setText(data.size() + " registro" + (data.size() == 1 ? "" : "s"));
+        masterData.setAll(appointments);
+        onSearch();
+    }
+
+    @FXML
+    private void onSearch() {
+        String text = searchField.getText() == null
+                ? "" : searchField.getText().strip().toLowerCase(Locale.ROOT);
+
+        filteredData.setPredicate(a -> {
+            if (text.isEmpty()) return true;
+            String client = a.getClient() != null
+                    ? (a.getClient().getFirstName() + " " + a.getClient().getLastName())
+                            .toLowerCase(Locale.ROOT)
+                    : "";
+            String service = a.getServiceType() != null
+                    ? a.getServiceType().toLowerCase(Locale.ROOT) : "";
+            String desc = a.getDescription() != null
+                    ? a.getDescription().toLowerCase(Locale.ROOT) : "";
+            return client.contains(text) || service.contains(text) || desc.contains(text);
+        });
+
+        int n = filteredData.size();
+        recordCountLabel.setText(n + " registro" + (n == 1 ? "" : "s"));
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

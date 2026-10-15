@@ -64,6 +64,11 @@
                     <Region HBox.hgrow="ALWAYS" />
                     <Label fx:id="recordCountLabel" text="0 registros" styleClass="record-count" />
                 </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="toolbar">
+                    <Label text="Buscar" styleClass="field-label" />
+                    <TextField fx:id="searchField" promptText="Cliente, servicio o descripción"
+                               HBox.hgrow="ALWAYS" />
+                </HBox>
                 <FlowPane hgap="8.0" vgap="10.0" rowValignment="BOTTOM" styleClass="toolbar">
                     <VBox spacing="5.0">
                         <Label text="Estado" styleClass="field-label" />

@@ -1,13 +1,12 @@
 package ni.edu.uam.citastecnicas;
 
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.stage.Stage;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.layout.BorderPane;
 import ni.edu.uam.citastecnicas.controller.CitasTecnicasController;
 import ni.edu.uam.citastecnicas.controller.ClientController;
 import ni.edu.uam.citastecnicas.dao.ClientDao;
@@ -17,68 +16,92 @@ import ni.edu.uam.citastecnicas.service.AppointmentService;
 import ni.edu.uam.citastecnicas.service.ClientService;
 
 import java.io.IOException;
+import java.net.URL;
 
 public class MainController {
+
+    private static final String BASE = "/ni/edu/uam/citastecnicas/fxml/";
+    private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");
+
+    @FXML private BorderPane root;
+    @FXML private Button appointmentsButton;
+    @FXML private Button clientsButton;
+
     private final ClientService clientService;
     private final AppointmentService appointmentService;
 
-    @FXML
-    private Label welcomeText;
-
     public MainController() {
-        ClientDao clientDao = new JdbcClientDao();
-        clientService = new ClientService(clientDao);
-        appointmentService = new AppointmentService(
-                new JdbcAppointmentDao(), clientDao
-        );
+        ClientDao clients = new JdbcClientDao();
+        clientService = new ClientService(clients);
+        appointmentService = new AppointmentService(new JdbcAppointmentDao(), clients);
     }
 
     @FXML
-    protected void onStartClick() {
+    private void initialize() {
+        mostrarCitas();
+    }
+
+    @FXML
+    private void mostrarCitas() {
+        if (cargarVista("CitasTecnicas.fxml")) {
+            selectModule(appointmentsButton);
+        }
+    }
+
+    @FXML
+    private void mostrarClientes() {
+        if (cargarVista("clients.fxml")) {
+            selectModule(clientsButton);
+        }
+    }
+
+    private boolean cargarVista(String file) {
         try {
-            FXMLLoader clientLoader = new FXMLLoader(
-                    getClass().getResource("fxml/clients.fxml")
-            );
-            clientLoader.setControllerFactory(type -> {
+            URL url = getClass().getResource(BASE + file);
+            if (url == null) {
+                throw new IOException("No se encontró la pantalla: " + file);
+            }
+
+            FXMLLoader loader = new FXMLLoader(url);
+            loader.setControllerFactory(type -> {
                 if (type == ClientController.class) {
                     return new ClientController(clientService);
                 }
+                if (type == CitasTecnicasController.class) {
+                    return new CitasTecnicasController();
+                }
                 throw new IllegalArgumentException(
-                        "Controlador de clientes inesperado: " + type.getName()
+                        "Controlador inesperado: " + type.getName()
                 );
             });
-            Parent clientRoot = clientLoader.load();
-            ClientController clientController = clientLoader.getController();
+            Parent view = loader.load();
 
-            FXMLLoader appointmentLoader = new FXMLLoader(
-                    getClass().getResource("fxml/CitasTecnicas.fxml")
-            );
-            Parent appointmentRoot = appointmentLoader.load();
-            CitasTecnicasController appointmentController =
-                    appointmentLoader.getController();
-            appointmentController.setServices(appointmentService, clientService);
+            if (loader.getController() instanceof CitasTecnicasController controller) {
+                controller.setServices(appointmentService, clientService);
+            }
 
-            Tab clientTab = new Tab("Clientes", clientRoot);
-            Tab appointmentTab = new Tab("Citas", appointmentRoot);
-            TabPane modules = new TabPane(clientTab, appointmentTab);
-            modules.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-            modules.getSelectionModel().selectedItemProperty().addListener(
-                    (observable, previous, selected) -> {
-                        if (selected == appointmentTab) {
-                            appointmentController.refreshData();
-                        } else if (selected == clientTab) {
-                            clientController.cargarClientes();
-                        }
-                    }
-            );
-
-            Stage stage = (Stage) welcomeText.getScene().getWindow();
-            Scene scene = new Scene(modules, 1150, 760);
-            stage.setTitle("TecnoAsistencia Nicaragua S.A. — Clientes y Citas");
-            stage.setScene(scene);
-            stage.centerOnScreen();
+            root.setCenter(view);
+            return true;
         } catch (IOException e) {
-            welcomeText.setText("Error al cargar los módulos: " + e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("No se pudo abrir el módulo");
+            alert.setHeaderText(null);
+            alert.setContentText(e.getMessage());
+            alert.getDialogPane().getStylesheets().add(
+                    getClass().getResource("/ni/edu/uam/citastecnicas/css/root.css")
+                            .toExternalForm()
+            );
+            alert.showAndWait();
+            return false;
         }
+    }
+
+    private void selectModule(Button selected) {
+        appointmentsButton.pseudoClassStateChanged(
+                SELECTED, selected == appointmentsButton
+        );
+        clientsButton.pseudoClassStateChanged(
+                SELECTED, selected == clientsButton
+        );
     }
 }
