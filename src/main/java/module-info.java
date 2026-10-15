@@ -1,4 +1,5 @@
 module ni.edu.uam.citastecnicas {
+    requires static lombok;
     requires javafx.controls;
     requires javafx.fxml;
 
