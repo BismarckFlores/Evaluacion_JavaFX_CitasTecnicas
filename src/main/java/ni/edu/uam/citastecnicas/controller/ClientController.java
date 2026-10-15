@@ -3,6 +3,7 @@ package ni.edu.uam.citastecnicas.controller;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -10,6 +11,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -33,8 +35,7 @@ public class ClientController {
     private static final Pattern PATRON_CORREO =
             Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
-    private static final String ESTILO_ERROR =
-            "-fx-border-color: #d32f2f; -fx-border-width: 1.5; -fx-border-radius: 3;";
+    private static final PseudoClass INVALID = PseudoClass.getPseudoClass("invalid");
 
     @FXML
     private TextField txtBuscar;
@@ -147,6 +148,19 @@ public class ClientController {
         colEstado.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().isActive() ? "Activo" : "Inactivo")
         );
+        colEstado.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+                getStyleClass().removeAll("status-success", "status-neutral");
+                setText(empty ? null : status);
+                if (!empty && status != null) {
+                    getStyleClass().add(
+                            "Activo".equals(status) ? "status-success" : "status-neutral"
+                    );
+                }
+            }
+        });
     }
 
     /**
@@ -286,7 +300,7 @@ public class ClientController {
     }
 
     private void mostrarErrorVisual(TextField campo, Label labelError, String mensaje) {
-        campo.setStyle(ESTILO_ERROR);
+        campo.pseudoClassStateChanged(INVALID, true);
         if (labelError != null) {
             labelError.setText(mensaje);
             labelError.setVisible(true);
@@ -295,7 +309,7 @@ public class ClientController {
     }
 
     private void limpiarErrorVisual(TextField campo, Label labelError) {
-        campo.setStyle(null);
+        campo.pseudoClassStateChanged(INVALID, false);
         if (labelError != null) {
             labelError.setText("");
             labelError.setVisible(false);
