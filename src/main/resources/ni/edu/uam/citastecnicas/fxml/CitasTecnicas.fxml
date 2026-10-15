@@ -3,7 +3,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="ni.edu.uam.citastecnicas.controller.CitasTecnicasController"
@@ -31,67 +30,49 @@
                         <Insets topRightBottomLeft="20.0"/>
                     </padding>
 
-                    <!-- Section title -->
                     <Label text="Datos de la Cita"
                            style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
                     <Separator/>
 
-                    <!-- Cliente ComboBox -->
                     <VBox spacing="4.0">
                         <Label text="Cliente *" style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-                        <ComboBox fx:id="clientComboBox"
-                                  promptText="Seleccionar cliente..."
-                                  maxWidth="Infinity"
-                                  style="-fx-background-radius: 4;"/>
+                        <ComboBox fx:id="clientComboBox" promptText="Seleccionar cliente..."
+                                  maxWidth="Infinity" style="-fx-background-radius: 4;"/>
                     </VBox>
 
-                    <!-- Fecha -->
                     <VBox spacing="4.0">
                         <Label text="Fecha *" style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-                        <DatePicker fx:id="datePicker"
-                                    promptText="dd/mm/yyyy"
-                                    maxWidth="Infinity"
-                                    style="-fx-background-radius: 4;"/>
+                        <DatePicker fx:id="datePicker" promptText="dd/mm/yyyy"
+                                    maxWidth="Infinity" style="-fx-background-radius: 4;"/>
                     </VBox>
 
-                    <!-- Hora -->
                     <VBox spacing="4.0">
                         <Label text="Hora * (HH:mm)" style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-                        <TextField fx:id="timeField"
-                                   promptText="Ej: 09:30"
+                        <TextField fx:id="timeField" promptText="Ej: 09:30"
                                    style="-fx-background-radius: 4;"/>
                     </VBox>
 
-                    <!-- Tipo de Servicio -->
                     <VBox spacing="4.0">
                         <Label text="Tipo de servicio *" style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-                        <TextField fx:id="serviceTypeField"
-                                   promptText="Ej: Mantenimiento preventivo"
+                        <TextField fx:id="serviceTypeField" promptText="Ej: Mantenimiento preventivo"
                                    style="-fx-background-radius: 4;"/>
                     </VBox>
 
-                    <!-- Descripción -->
                     <VBox spacing="4.0">
                         <Label text="Descripción *" style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-                        <TextArea fx:id="descriptionArea"
-                                  promptText="Detalles de la cita..."
-                                  prefRowCount="4"
-                                  wrapText="true"
+                        <TextArea fx:id="descriptionArea" promptText="Detalles de la cita..."
+                                  prefRowCount="4" wrapText="true"
                                   style="-fx-background-radius: 4;"/>
                     </VBox>
 
-                    <!-- Estado -->
                     <VBox spacing="4.0">
                         <Label text="Estado *" style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-                        <ComboBox fx:id="statusComboBox"
-                                  promptText="Seleccionar estado..."
-                                  maxWidth="Infinity"
-                                  style="-fx-background-radius: 4;"/>
+                        <ComboBox fx:id="statusComboBox" promptText="Seleccionar estado..."
+                                  maxWidth="Infinity" style="-fx-background-radius: 4;"/>
                     </VBox>
 
                     <Separator/>
 
-                    <!-- CRUD Buttons -->
                     <GridPane hgap="8.0" vgap="8.0">
                         <columnConstraints>
                             <ColumnConstraints hgrow="ALWAYS"/>
@@ -132,50 +113,42 @@
                     <Insets top="10.0" right="10.0" bottom="10.0" left="6.0"/>
                 </padding>
 
-                <!-- Filter bar -->
-                <HBox spacing="10.0" alignment="CENTER_LEFT"
+                <!-- Search + filter bar -->
+                <HBox spacing="10.0" alignment="BOTTOM_LEFT"
                       style="-fx-background-color: white; -fx-background-radius: 8;
                              -fx-padding: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2);">
 
-                    <Label text="Filtros:" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                    <VBox spacing="2.0">
+                        <Label text="Buscar" style="-fx-font-size: 11; -fx-text-fill: #777;"/>
+                        <TextField fx:id="searchField" promptText="Cliente, servicio o descripción..."
+                                   prefWidth="220.0" onKeyReleased="#onSearch"
+                                   style="-fx-background-radius: 4;"/>
+                    </VBox>
 
                     <VBox spacing="2.0">
                         <Label text="Estado" style="-fx-font-size: 11; -fx-text-fill: #777;"/>
-                        <ComboBox fx:id="filterStatusComboBox"
-                                  promptText="Todos"
-                                  prefWidth="140.0"
-                                  style="-fx-background-radius: 4;"/>
+                        <ComboBox fx:id="filterStatusComboBox" promptText="Todos"
+                                  prefWidth="130.0" style="-fx-background-radius: 4;"/>
                     </VBox>
 
                     <VBox spacing="2.0">
                         <Label text="Fecha" style="-fx-font-size: 11; -fx-text-fill: #777;"/>
-                        <DatePicker fx:id="filterDatePicker"
-                                    promptText="Todas"
-                                    prefWidth="150.0"
-                                    style="-fx-background-radius: 4;"/>
+                        <DatePicker fx:id="filterDatePicker" promptText="Todas"
+                                    prefWidth="140.0" style="-fx-background-radius: 4;"/>
                     </VBox>
 
                     <Button text="🔍  Filtrar" onAction="#onFilter"
                             style="-fx-background-color: #2980b9; -fx-text-fill: white;
-                                   -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;
-                                   -fx-padding: 8 14 8 14;">
-                        <VBox.margin><Insets top="14.0"/></VBox.margin>
-                    </Button>
+                                   -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;"/>
 
-                    <Button text="↺  Limpiar filtros" onAction="#onClearFilters"
+                    <Button text="↺  Limpiar" onAction="#onClearFilters"
                             style="-fx-background-color: #7f8c8d; -fx-text-fill: white;
-                                   -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;
-                                   -fx-padding: 8 14 8 14;">
-                        <VBox.margin><Insets top="14.0"/></VBox.margin>
-                    </Button>
+                                   -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;"/>
 
                     <Region HBox.hgrow="ALWAYS"/>
 
-                    <Label fx:id="recordCountLabel"
-                           text="0 registros"
-                           style="-fx-text-fill: #7f8c8d; -fx-font-size: 11;">
-                        <VBox.margin><Insets top="14.0"/></VBox.margin>
-                    </Label>
+                    <Label fx:id="recordCountLabel" text="0 registros"
+                           style="-fx-text-fill: #7f8c8d; -fx-font-size: 11;"/>
                 </HBox>
 
                 <!-- TableView -->
@@ -191,21 +164,7 @@
                     </placeholder>
 
                     <columns>
-                        <TableColumn fx:id="colId"       text="ID"              prefWidth="55.0"  minWidth="45.0"/>
-                        <TableColumn fx:id="colClient"   text="Nombre del cliente" prefWidth="210.0" minWidth="150.0"/>
-                        <TableColumn fx:id="colDate"     text="Fecha"           prefWidth="110.0" minWidth="90.0"/>
-                        <TableColumn fx:id="colTime"     text="Hora"            prefWidth="80.0"  minWidth="65.0"/>
-                        <TableColumn fx:id="colService"  text="Servicio"        prefWidth="180.0" minWidth="120.0"/>
-                        <TableColumn fx:id="colStatus"   text="Estado"          prefWidth="110.0" minWidth="90.0"/>
-                    </columns>
-
-                    <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-                    </columnResizePolicy>
-                </TableView>
-
-            </VBox>
-        </SplitPane>
-    </center>
-
-</BorderPane>
+                        <TableColumn fx:id="colId"      text="ID"                  prefWidth="55.0"  minWidth="45.0"/>
+                        <TableColumn fx:id="colClient"  text="Nombre del cliente"  prefWidth="210.0" minWidth="150.0"/>
+                        <TableColumn fx:id="colDate"    text="Fecha"               prefWidth="110.0" minWidth="90.0"/>
+                        <TableColumn fx:id="colTime"    text="Hora"                prefWidth="80.0"  minWidth="65.0"/>
